@@ -1,0 +1,50 @@
+name: api controller Deployment
+ 
+trigger:
+  - feature/init
+pool:
+  vmImage: "windows-latest"
+jobs:
+  - deployment: Dev
+    displayName: "api controller Dev Deployment"
+    environment: "API-CONTROLLER-DEV"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+ 
+            - task: CopyFiles@2
+              inputs: |
+                SourceFolder:'$(Build.SourcesDirectory)'
+                Contents: '**/*.js'
+                TargetFolder: '$(Build.SourcesDirectory)/source'
+ 
+            - task: ArchiveFiles@2
+              inputs: |
+                rootFolderOrFile: '$(Build.SourcesDirectory)/source'
+              includeRootFolder: false
+                archiveType: 'zip'
+                archiveFile: '$(Build.Sources Directory)/source/script.zip'
+                replaceExistingArchive: true
+ 
+            - task: PublishBuildArtifacts@1
+              inputs: |
+                PathtoPublish: '$(Build.SourcesDirectory)/source'
+                ArtifactName: 'drop'
+                publishLocation: 'Container'
+ 
+            - task: DownloadBuildArtifacts@0
+              inputs: |
+                buildType: 'current'
+                downloadType: 'single'
+                downloadPath: '$(System. ArtifactsDirectory)'
+                artifactName: 'drop'
+ 
+            - task: AzureFunctionApp@2
+              inputs: |
+                azureSubscription: 'rg-dev-iac-platform-provisioning'
+                appType: 'functionAppLinux
+                appName: func-dev-iac-platform-controller-api
+                package: '$(System.ArtifactsDirectory)\**\*.zip
+                deployment Method: 'zipDeploy'
